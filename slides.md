@@ -1624,9 +1624,6 @@ Rules:
 - If possible, devirtualize functions
 
 
-TODO: More here?
-
-
 ## Avoid Type Erasure
 
 ```c++
