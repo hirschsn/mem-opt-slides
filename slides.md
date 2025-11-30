@@ -1,6 +1,6 @@
 ---
-author: Dr. Steffen Hirschmann
-title: Memory Optimization (RAM & ROM)
+author: Dr. Steffen Hirschmann<br/>(Slides can be shared under CC-BY-SA.)
+title: Embedded Memory Optimization (RAM & ROM)
 subtitle: ESE Kongress 2025, Sindelfingen
 date: 2025-12-01
 slideNumber: true
