@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Dr. Steffen Hirschmann (Slides can be shared under CC-BY-SA.)">
+  <meta name="dcterms.date" content="2025-12-01">
+  <title>Embedded Memory Optimization (RAM &amp; ROM)</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reset.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/serif.css" id="theme">
+  <style>
+
+  figcaption {
+      font-size: 0.6em !important;
+      font-style: italic !important;
+  }
+
+  .subtitle {
+      font-style: italic !important;
+  }
+
+  .date {
+      font-size: 0.75em !important;
+  }
+
+  .reveal h1 {
+      font-size: 2.75em !important;
+  }
+
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Embedded Memory Optimization (RAM &amp; ROM)</h1>
+  <p class="subtitle">ESE Kongress 2025, Sindelfingen</p>
+  <p class="author">Dr. Steffen Hirschmann<br/>(Slides can be shared
+under CC-BY-SA.)</p>
+  <p class="date">2025-12-01</p>
+</section>
+
+<section>
+<section id="the-good-news" class="title-slide slide level1">
+<h1>The Good News</h1>
+<p>It’s not rocket science!</p>
+</section>
+<section id="who-am-i" class="slide level2">
+<h2>Who am I?</h2>
+<ul>
+<li>2015–2021: PhD in Scientific Computing / HPC
+<ul>
+<li>Optimize large-scale simulations</li>
+</ul></li>
+<li>2021–2024 Performance Engineer at Bosch
+<ul>
+<li>Embedded Optimizations (ARMv7, ARMv8, TriCore, and more)</li>
+<li>ROM/RAM/Runtime ROI impact: Saved millions EUR</li>
+</ul></li>
+<li>2024–2025 Performance Engineer at Efficientware</li>
+</ul>
+</section>
+<section id="agenda" class="slide level2">
+<h2>Agenda</h2>
+<p>Part 1 (why, what, how):</p>
+<ul>
+<li>What exactly is ROM? What “consumes” it?</li>
+<li>File Formats: ELF</li>
+<li>Memory Layout?</li>
+<li>Measuring ROM Consumption</li>
+</ul>
+<p>Part 2 &amp; 3: ROM &amp; RAM optimization</p>
+<ul>
+<li>Examples, dig deep</li>
+<li>Understand mapping of C/C++ to binary</li>
+<li>Compiler/runtime environment trade-offs</li>
+<li>Guiding compiler</li>
+<li>General guardrails and rules</li>
+</ul>
+</section></section>
+<section>
+<section id="part-1-why-what-approach" class="title-slide slide level1">
+<h1>Part 1: Why? What? (Approach)</h1>
+
+</section>
+<section id="reasons-to-optimize-for-ram-andor-rom"
+class="slide level2">
+<h2>Reasons to Optimize for RAM and/or ROM</h2>
+<ul>
+<li>SW does not fit on HW (cannot be flashed anymore)
+<ul>
+<li>Project dead (we have seen projects on the edge of failure due to
+ROM issues)</li>
+<li>Contractual penalty</li>
+</ul></li>
+<li>Smaller device
+<ul>
+<li>Larger profit margin, save $$$</li>
+</ul></li>
+<li>Outperform competition
+<ul>
+<li>Have more features on the same device</li>
+</ul></li>
+<li>Update to existing Embedded device
+<ul>
+<li>Extend lifetime of product</li>
+</ul></li>
+</ul>
+</section>
+<section id="cost" class="slide level2">
+<h2>Cost</h2>
+<p>Past experience:</p>
+<ul>
+<li><p>Project requires about 100 kB more ROM than available on
+SoC.</p></li>
+<li><p>Cost estimated at around 0.00014 €/kB (0.014 cent).</p></li>
+<li><p>230 million devices =&gt; 32,000 €/kB</p></li>
+<li><p>100 kB =&gt; 3.2 mio €.</p></li>
+</ul>
+<p>This cost does not include any complications that adding more memory
+to a device brings along, like the need for more elaborate packaging and
+cooling solutions!</p>
+</section>
+<section id="green-software" class="slide level2">
+<h2>Green Software</h2>
+<p>IPhone 14: 61 kg CO2e (GWP100)</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>%</th>
+<th>1 device</th>
+<th>230 mio. devices</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Production</td>
+<td>79%</td>
+<td>49.4 kg CO2e</td>
+<td>11.4 mio tons CO2e</td>
+</tr>
+<tr class="even">
+<td>Use</td>
+<td>18%</td>
+<td>11 kg CO2e</td>
+<td>2.52 mio tons CO2e</td>
+</tr>
+</tbody>
+</table>
+<p>230 mio iPhone 14: ~ Slovenia or Estonia</p>
+<ul>
+<li>Less production CO2</li>
+<li>Less energy use during runtime (e.g. only 13.5% of new cars in the
+EU are “emission-free”)</li>
+</ul>
+</section>
+<section id="optimization-cycle" class="slide level2">
+<h2>Optimization Cycle</h2>
+<p><img data-src="img/optimization-process-2.png"
+style="height:50.0%" /></p>
+</section>
+<section id="optimization-cycle-1" class="slide level2">
+<h2>Optimization Cycle</h2>
+<p><img data-src="img/optimization-process.png"
+style="height:50.0%" /></p>
+</section>
+<section id="how-can-we-understand-rom-ram-consumption"
+class="slide level2">
+<h2>How can we Understand ROM &amp; RAM Consumption?</h2>
+<p>Understand…</p>
+<ol type="1">
+<li>what ROM is,</li>
+<li>how to measure it,</li>
+<li>mapping of C/C++/… to binary,</li>
+<li>continuously monitor in your project</li>
+</ol>
+</section>
+<section id="what-is-ram-rom" class="slide level2">
+<h2>What is RAM &amp; ROM</h2>
+<table>
+<thead>
+<tr class="header">
+<th>ROM</th>
+<th>RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Read Only Memory</td>
+<td>Random Access Memory</td>
+</tr>
+<tr class="even">
+<td>EEPROM or Flash</td>
+<td>DRAM</td>
+</tr>
+</tbody>
+</table>
+<p>Analogy to PCs: ROM = Disk space; RAM = RAM</p>
+<p>What do we store there?</p>
+<ul>
+<li>ROM: Code, read-only data (“constants”), initialization data</li>
+<li>RAM: State (variables, etc.)</li>
+</ul>
+<p>Embedded devices <em>may not</em> be able to execute from flash.</p>
+<ul>
+<li>ROM might need to be completely loaded into RAM (see PC)</li>
+</ul>
+<p>Problem: Disparity between C/C++ and ROM / RAM consumption.</p>
+</section>
+<section id="software-build-pipeline" class="slide level2">
+<h2>Software Build Pipeline</h2>
+<p><img data-src="img/compilation-pipeline.png"
+style="height:70.0%" /></p>
+</section>
+<section id="elf-structure" class="slide level2">
+<h2>ELF Structure</h2>
+<ul>
+<li>ELF Header</li>
+<li>Program headers (also called “segment headers”)</li>
+<li>Binary blob</li>
+<li>Optional: Section headers</li>
+</ul>
+</section>
+<section id="elf-structure-1" class="slide level2">
+<h2>ELF Structure</h2>
+<figure>
+<img data-src="img/elf.png" height="700"
+alt="Image copyright Ange Albertini, CC-BY" />
+<figcaption aria-hidden="true">Image copyright Ange Albertini,
+CC-BY</figcaption>
+</figure>
+</section>
+<section id="elf-structure-2" class="slide level2">
+<h2>ELF Structure</h2>
+<p>Segment headers:</p>
+<ul>
+<li>Information for loading at runtime / flashed to device</li>
+</ul>
+<p>Section headers:</p>
+<ul>
+<li>For participation in linking (static or dynamic)</li>
+<li>Not inspected by loader / flashing</li>
+</ul>
+<p>Sections are valuable:</p>
+<ul>
+<li>Names come from linker scripts</li>
+<li>We will inspect sections because they define what the data is</li>
+<li>Debug info comes in extra sections</li>
+<li>Therefore, we need a non-stripped executable</li>
+</ul>
+</section>
+<section id="elf-example" class="slide level2">
+<h2>ELF Example</h2>
+<pre><code>$ readelf -h my_program
+ELF Header:
+  Magic:   7f 45 4c 46 01 01 01 00 [...] 
+  Class:                     ELF32
+  Data:                      2&#39;s complement, little endian
+  Version:                   1 (current)
+  OS/ABI:                    UNIX - System V
+  ABI Version:               0
+  Type:                      EXEC (Executable file)
+  Machine:                   ARM
+  Version:                   0x1
+  Entry point address:       0x8125
+  Start of program headers:  52 (bytes into file)
+  Start of section headers:  6393040 (bytes into file)
+  Flags:                     Version5 EABI, hard-float ABI
+  [...]</code></pre>
+<p><a
+href="https://godbolt.org/z/PqvbceT99">https://godbolt.org/z/PqvbceT99</a></p>
+</section>
+<section id="elf-example-program-headers" class="slide level2">
+<h2>ELF Example: Program headers</h2>
+<pre><code>$ readelf -l my_program
+[...]
+
+Program Headers:
+  Type       Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  ARM_EXIDX  0x0d9030 0x000d9030 0x000d9030 0x00008 0x00008 R   0x4
+  LOAD       0x000000 0x00000000 0x00000000 0xd903c 0xd903c R E 0x10000
+  LOAD       0x0d903c 0x000e903c 0x000e903c 0x0080c 0x3719c RW  0x10000
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .ARM.exidx 
+   01     .init .text .fini .rodata .ARM.exidx .eh_frame 
+   02     .init_array .fini_array .data .bss</code></pre>
+</section>
+<section id="elf-example-section-headers" class="slide level2">
+<h2>ELF Example: Section headers</h2>
+<pre><code>$ readelf -S my_program
+[...]
+
+Section Headers:
+  [Nr] Name              Type      Addr     Off    Size   ES Flg Lk Inf Al
+[...]
+  [ 2] .text    PROGBITS  00008040 008040 012d90 00  AX  0   0 64
+[...]
+  [ 4] .rodata  PROGBITS  0001ade0 01ade0 0be250 00   A  0   0 16
+[...]
+  [ 9] .data    PROGBITS  000e9048 0d9048 000800 00  WA  0   0  8
+  [11] .bss     NOBITS    000e9850 0d9848 036988 00  WA  0   0 16
+[...]
+  [24] .symtab  SYMTAB    00000000 60bfdc 006810 10     25 1133  4
+  [25] .strtab  STRTAB    00000000 6127ec 0063cc 00      0   0  1
+
+[...]</code></pre>
+</section>
+<section id="special-elf-sections-symtab-dynsym-debug"
+class="slide level2">
+<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<p>Ever encountered this while debugging?</p>
+<pre><code>0x00007ffff7fc310e in ?? () from ./liba.so
+(gdb) where
+#0 0x00007ffff7fc310e in ?? () from ./liba.so
+#1 0x00007ffff7fc3156 in func1 () from ./liba.so
+#2 0x00005555555551b6 in ?? ()
+#3 0x00007ffff7de7083 in __libc_start_main () from /lib/x86_64-linux-gnu/libc.so.6
+#4 0x00005555555550ce in ?? ()</code></pre>
+<ul>
+<li>“Stripped”</li>
+<li>Here, we only see exported or imported symbols (“dynsym”)</li>
+</ul>
+</section>
+<section id="special-elf-sections-symtab-dynsym-debug-1"
+class="slide level2">
+<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<p>Symbol tables in ELF (simplified)</p>
+<p>Liba.so internals, “a.c”:</p>
+<pre><code>static int f2(int i) { ... }        // internal linkage
+static int f1(int i) { ... }        //          &quot;
+int func1(int i) { ... }            // external linkage</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th>.dynsym</th>
+<th>.symtab</th>
+<th>.debug_*</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>func1</td>
+<td>f2</td>
+<td>f2: source, params, types, etc.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>f1</td>
+<td>f1: dito</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>f1</td>
+<td>func: dito</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>.dynsym is mandatory if ex-/imported symbols exist (for dynamic
+linking)</li>
+<li>.symtab is optional (for static linking)</li>
+<li>.debug_* is optional</li>
+</ul>
+</section>
+<section id="special-elf-sections-symtab-dynsym-debug-2"
+class="slide level2">
+<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<p>Symbol tables in ELF (simplified)</p>
+<ul>
+<li>With .dynsym</li>
+</ul>
+<pre><code>0x00007ffff7fc310e in ?? () from ./liba.so
+(gdb) where
+#0 0x00007ffff7fc310e in ?? () from ./liba.so
+#1 0x00007ffff7fc3156 in func1 () from ./liba.so
+#2 0x00005555555551b6 in ?? ()
+#3 0x00007ffff7de7083 in __libc_start_main () from /lib/x86_64-linux-gnu/libc.so.6
+#4 0x00005555555550ce in ?? ()</code></pre>
+</section>
+<section id="special-elf-sections-symtab-dynsym-debug-3"
+class="slide level2">
+<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<p>Symbol tables in ELF (simplified)</p>
+<ul>
+<li>With .dynsym, .symtab</li>
+</ul>
+<pre><code>0x00007ffff7fc310e in f1 () from ./liba.so
+(gdb) where
+#0 0x00007ffff7fc310e in f2 () from ./liba.so
+#1 0x00007ffff7fc3156 in func1 () from ./liba.so
+#2 0x00005555555551b6 in main ()</code></pre>
+</section>
+<section id="special-elf-sections-symtab-dynsym-debug-4"
+class="slide level2">
+<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<p>Symbol tables in ELF (simplified)</p>
+<ul>
+<li>With .dynsym, .symtab, .debug_*</li>
+</ul>
+<pre><code>0x00007ffff7fc310e in f1 (i=321) at a.c:2
+(gdb) where
+#0 0x00007ffff7fc310e in f2 (i=12) at a.c:6
+#1 0x00007ffff7fc3156 in func1 (i=12) at a.c:18
+#2 0x00005555555551b6 in main (argc=2, argv=Ox/fffffffd978) at main.c:7</code></pre>
+</section></section>
+<section>
+<section id="part-1.5-how-to-measure-ramrom"
+class="title-slide slide level1">
+<h1>Part 1.5: How to Measure RAM/ROM</h1>
+
+</section>
+<section id="general-idea" class="slide level2">
+<h2>General Idea</h2>
+<p>Through understanding the binary (ELF), we can attribute RAM/ROM to
+binary parts of the binary program.</p>
+<ul>
+<li>Segments: Inspect headers.</li>
+<li>Sections: Inspect headers (optional)</li>
+<li>C/C++ names: Inspect debug info and/or symtab (optional
+sections)</li>
+<li>C/C++ names: Additional linker output (“mapfile”)</li>
+</ul>
+<p>Be careful: We only measure static consumption (compile-time
+determined)</p>
+<ul>
+<li>ROM is always static</li>
+<li>RAM typically also in embedded projects (no heap, etc.)</li>
+</ul>
+</section>
+<section id="which-elf-do-we-use" class="slide level2">
+<h2>Which ELF do we Use?</h2>
+<p><img data-src="img/compilation-pipeline.png"
+style="height:50.0%" /></p>
+<ul>
+<li>Can use any ELF file: .o, .a, .so, executable</li>
+</ul>
+</section>
+<section id="object-files-and-static-libraries" class="slide level2">
+<h2>Object Files and Static Libraries</h2>
+<p>You can assess the ROM usage of .o or a .a files</p>
+<p><em>But be careful:</em></p>
+<ul>
+<li>Weak symbols (non-ODR) appear multiple times (in multiple object
+files), but will only be included once in the final executable</li>
+<li>They might contain functions and/or data (or complete sections) that
+are not included in the final binary (e.g. -fdata-sections
+–gc-sections)</li>
+<li>Complete .o or .a files might be skipped if final executable does
+not need them</li>
+</ul>
+</section>
+<section id="measuring-ramrom-symtab-information" class="slide level2">
+<h2>Measuring RAM/ROM: Symtab Information</h2>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  Elf64_Word    st_name<span class="op">;</span>    <span class="co">/* Symbol name (string tbl index) */</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">unsigned</span> <span class="dt">char</span> st_info<span class="op">;</span>    <span class="co">/* Symbol type and binding */</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">unsigned</span> <span class="dt">char</span> st_other<span class="op">;</span>   <span class="co">/* Symbol visibility */</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  Elf64_Section st_shndx<span class="op">;</span>   <span class="co">/* Section index */</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  Elf64_Addr    st_value<span class="op">;</span>   <span class="co">/* Symbol value */</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  Elf64_Xword   st_size<span class="op">;</span>    <span class="co">/* Symbol size */</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> Elf64_Sym<span class="op">;</span></span></code></pre></div>
+<p>We can extract this information (if it is available) with tools</p>
+<ul>
+<li>Binutils: <code>nm -S</code></li>
+<li>GHS: <code>gfunsize</code></li>
+<li>…</li>
+</ul>
+<p><img data-src="img/inline-candidates.png" /></p>
+<p>(Ignore the “candidates” stuff for now).</p>
+</section>
+<section id="measuring-ramrom-symtab-information-with-bloaty"
+class="slide level2">
+<h2>Measuring RAM/ROM: Symtab Information with Bloaty</h2>
+<p><a
+href="https://github.com/google/bloaty">https://github.com/google/bloaty</a></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloaty</span> <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--domain</span> vm <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">-s</span> vm <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">-d</span> sections,symbols <span class="dt">\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">-n</span> 0 <span class="dt">\</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;</span>elf_file<span class="op">&gt;</span></span></code></pre></div>
+<ul>
+<li><code>--domain vm</code>: runtime RAM/ROM consumption (in contrast
+to file size)</li>
+<li><code>-s vm</code> sort w.r.t. <code>vm</code> usage</li>
+<li><code>-d sections,symbols</code> list sections and for each section
+the contained symbols (if you have debug symbols, you can also say
+<code>-d compileunits</code>)</li>
+<li><code>-n 0</code> do not truncate</li>
+</ul>
+<p>IF you have a toolchain that mangles differently, but it comes with a
+<code>c++filt</code> equivalent (for GHS: <code>decode</code>):
+<code>bloaty &lt;...&gt; | decode</code></p>
+</section>
+<section id="measuring-ramrom-diffing-two-binaries"
+class="slide level2">
+<h2>Measuring RAM/ROM: Diffing Two Binaries</h2>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloaty</span> <span class="op">&lt;</span>options<span class="op">&gt;</span> <span class="op">&lt;</span>new_file<span class="op">&gt;</span> -- <span class="op">&lt;</span>old_file<span class="op">&gt;</span></span></code></pre></div>
+<p>Be careful of alignment in combination with linker reordering (might
+cause <em>arbitrary</em>, small differences).</p>
+</section>
+<section id="measuring-ramrom-mapfiles" class="slide level2">
+<h2>Measuring RAM/ROM: Mapfiles</h2>
+<ul>
+<li>Text file that contains detailed information about ELF</li>
+<li>Segments, Sections, Symbols with address <em>and size</em></li>
+</ul>
+<p>Additionally:</p>
+<ul>
+<li>Memory usage by translation unit</li>
+<li>Which translation units symbols stem from</li>
+<li>Cross-reference of symbols (where is it referenced?)</li>
+<li>etc.</li>
+</ul>
+<p>No need for debug symbols, because Linker outputs this information
+besides ELF</p>
+<ul>
+<li>GCC’s <code>gold</code> linker: <code>-Map</code></li>
+<li>Check for your toolchain</li>
+<li>Output by default, examine to check what info is available</li>
+</ul>
+</section>
+<section id="from-what-to-why" class="slide level2">
+<h2>From “What” to “Why”</h2>
+<ul>
+<li>Names tell us (roughly) where the problem is</li>
+<li>Typically problem not obvious in C/C++ code</li>
+</ul>
+<p>Drill further down from symbols to its parts</p>
+<ul>
+<li>Data memory layout / individual data members</li>
+<li>Inspecting code / disassembly</li>
+</ul>
+</section>
+<section id="additional-info-data-memory-layout-in-dwarf"
+class="slide level2">
+<h2>Additional Info: Data Memory Layout in DWARF</h2>
+<pre class="text"><code>0x0000a54d:   DW_TAG_structure_type
+                DW_AT_byte_size (0x08)
+                [...]
+                DW_AT_linkage_name      (&quot;2xy&quot;)
+                [...]
+0x0000a55b:     DW_TAG_member
+                  DW_AT_name    (&quot;x&quot;)
+                  [...]
+                  DW_AT_type    (0x0000098a &quot;int&quot;)
+                  DW_AT_data_member_location    (0x00)
+0x0000a566:     DW_TAG_member
+                  DW_AT_name    (&quot;y&quot;)
+                  [...]
+                  DW_AT_type    (0x0000098a &quot;int&quot;)
+                  DW_AT_data_member_location    (0x04)
+0x0000a571:     NULL</code></pre>
+</section>
+<section id="additional-info-view-data-memory-layout"
+class="slide level2">
+<h2>Additional Info: View Data Memory Layout</h2>
+<p>Information about struct layouts is saved in debug info (e.g. DWARF).
+Can be viewed with appropriate tools.</p>
+<ul>
+<li><code>dwarfdump</code></li>
+<li><code>pahole</code></li>
+<li><code>gdb</code>: <code>ptype</code> (<code>ptype /o</code> for size
+info)</li>
+<li>Lauterbach Trace32</li>
+<li>etc.</li>
+</ul>
+</section>
+<section id="additional-info-inspect-code" class="slide level2">
+<h2>Additional Info: Inspect Code</h2>
+<ul>
+<li>Disassembling</li>
+<li>Debug info for relation to source code</li>
+</ul>
+<p>Tools:</p>
+<ul>
+<li><code>objdump</code> (<code>-S</code> for source info)</li>
+<li><code>gdb</code>: <code>disas</code> (<code>disas /s</code> for
+source info)</li>
+<li>Trace32</li>
+<li>Ghidra</li>
+<li>etc.</li>
+</ul>
+<p>And of course:</p>
+<ul>
+<li>Godbolt</li>
+</ul>
+</section>
+<section id="measuring-stack-consumption" class="slide level2">
+<h2>Measuring Stack Consumption</h2>
+<p>Static upper bound:</p>
+<ul>
+<li>Tools can give conservative estimates</li>
+<li>Only works in constrained environments, e.g. no function pointers
+(vtable)</li>
+<li>E.g.: GHS gstack, GCC/Clang -fstack-usage / -Wstack-usage=N</li>
+</ul>
+<p>Dynamic (no upper bound guarantee!):</p>
+<ul>
+<li>Initialize whole stack segment with known pattern (grab top &amp;
+bot address in linker script)</li>
+<li>Run expected worst-case workload</li>
+<li>Count #bytes that do not contain pattern anymore</li>
+</ul>
+</section></section>
+<section>
+<section id="part-1.9-optimization-preliminaries"
+class="title-slide slide level1">
+<h1>PART 1.9: Optimization Preliminaries</h1>
+
+</section>
+<section id="the-elephant-in-the-room-flags" class="slide level2">
+<h2>The Elephant in the Room: Flags</h2>
+<p>ASIL toolchains usually come with fixed flags</p>
+<p>If you <em>can</em> change them (GNU/Clang):</p>
+<ul>
+<li>Optimization flags (-O1, -O2, -O3, -Os)</li>
+<li>Errno and other overheads? (-fno-math-errno,
+-fno-stack-protector)</li>
+<li>Function cleanup (-ffunction-sections -Wl,–gc-sections)</li>
+<li>No RTTI (-fno-rtti)</li>
+<li>No exceptions (-fno-exceptions)</li>
+<li>Which libc (e.g. GHS offers w/ and w/o exception support)</li>
+</ul>
+</section>
+<section id="inspecting-assembly" class="slide level2">
+<h2>Inspecting Assembly</h2>
+<p>Assembly allows us to</p>
+<ol type="1">
+<li>Figure out unneeded implementation details
+<ul>
+<li>E.g.: Errno? (-fno-math-errno)</li>
+</ul></li>
+<li>Check for missed optimization opportunity
+<ul>
+<li>E.g.: Failure to inline</li>
+</ul></li>
+<li>Check for suboptimal compiler output (excessive memory usage)
+<ul>
+<li>E.g.: Loop unrolling, initialization</li>
+</ul></li>
+</ol>
+</section>
+<section id="lets-take-the-sqrt" class="slide level2">
+<h2>Let’s Take the SQRT</h2>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> my_calculation<span class="op">(</span><span class="dt">float</span> x<span class="op">)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sqrt<span class="op">(</span>x<span class="op">);</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<!---
+![](img/sqrt-example.png)
+--->
+<p>Let’s say, we are on ARMv7 with FPU. What binary code should this
+generate?</p>
+<p><a
+href="https://godbolt.org/z/fjfrKb3s8">https://godbolt.org/z/fjfrKb3s8</a></p>
+</section>
+<section id="optimization-agenda" class="slide level2">
+<h2>Optimization Agenda</h2>
+<p>ROM:</p>
+<ul>
+<li>Function inlining &amp; parameter passing</li>
+<li>Constant propagation</li>
+<li>Trivial structures, data initialization</li>
+<li>Streamlining of data transformations (RAM+ROM)</li>
+</ul>
+<p>RAM:</p>
+<ul>
+<li>Padding, data sizes, alignment</li>
+<li>(Virtual) inheritance (RAM+ROM)</li>
+<li>Separation of concerns</li>
+<li>Stack</li>
+</ul>
+</section></section>
+<section>
+<section id="part-2-rom-optimization" class="title-slide slide level1">
+<h1>PART 2: ROM Optimization</h1>
+
+</section>
+<section id="inlining-function-calls" class="slide level2">
+<h2>Inlining (Function Calls)</h2>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>do_something<span class="op">(</span>a<span class="op">,</span> b<span class="op">,</span> c<span class="op">,</span> d<span class="op">);</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span></code></pre></div>
+<p>Function calls are an abstraction. What’s the abstraction?</p>
+</section>
+<section id="inlining-function-calls-1" class="slide level2">
+<h2>Inlining (Function Calls)</h2>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>do_something<span class="op">(</span>a<span class="op">,</span> b<span class="op">,</span> c<span class="op">,</span> d<span class="op">);</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span></code></pre></div>
+<p>Function calls are an abstraction. What’s the abstraction?</p>
+<ul>
+<li>Non-local transfer of control</li>
+<li>Parameter passing</li>
+<li>Whatever you do inside does not affect original function
+<ul>
+<li>local variables</li>
+<li>calling more functions</li>
+<li>recursion</li>
+</ul></li>
+</ul>
+<p>(The microarchitectural state of how a caller can be influenced, is
+potentially large.)</p>
+</section>
+<section id="function-calls-implementation" class="slide level2">
+<h2>Function Calls: Implementation</h2>
+<ul>
+<li>Some cost mandated by C/C++ standard, e.g. recursion is supported
+(though environment is free to choose how it is implemented)</li>
+<li>Calling interface specified in ABI. (What do I have to do to call
+function <code>f</code> in assembly?)</li>
+<li>E.g. for ARM: <a
+href="https://github.com/ARM-software/abi-aa/blob/2982a9f3b512a5bfdc9e3fea5d3b298f9165c36b/aapcs32/aapcs32.rst">AAPCS</a></li>
+<li>C++ additions: Itanium ABI, e.g. this pointer, name mangling,
+exceptions</li>
+</ul>
+</section>
+<section id="function-calls-cost" class="slide level2">
+<h2>Function Calls: Cost</h2>
+<ul>
+<li>Control transfer: Call &amp; return (2 insn)</li>
+<li><em>ARM:</em> Save&amp;restore the link register (2 insn)</li>
+<li><em>Optional:</em> Prepare function arguments
+<ul>
+<li>MOV to argument register, (1+ insn per arg)</li>
+<li>or: push to stack (2+ insn per arg)</li>
+<li>For ref/ptr: Move to stack, deref in callee (2+ insn per arg)</li>
+</ul></li>
+<li>Optional: Setup stack frame in callee
+<ul>
+<li>E.g. ADD + SUB (+ MOV x2 for frame pointer) (2-4 insn)</li>
+</ul></li>
+<li>Optional: Save state of caller
+<ul>
+<li>MOV from volatile to non-volatile register or ST+LD (2+ insn per
+register)</li>
+</ul></li>
+<li>…</li>
+</ul>
+<p>(Which one is needed per call-site, which one per function
+definition?)</p>
+</section>
+<section id="inlining-example" class="slide level2">
+<h2>Inlining Example</h2>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> StrongAlias <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    StrongAlias<span class="op">(</span><span class="at">const</span> T<span class="op">&amp;</span>val<span class="op">);</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    T<span class="op">&amp;</span> get<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    T _v<span class="op">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Meter <span class="op">=</span> StrongAlias<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Seconds <span class="op">=</span> StrongAlias<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;;</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MeterPerSecond <span class="op">=</span> StrongAlias<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;;</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>MeterPerSecond calc_speed<span class="op">(</span>Meter distance<span class="op">,</span> Seconds time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> MeterPerSecond<span class="op">{</span>distance<span class="op">.</span>get<span class="op">()</span> <span class="op">/</span> time<span class="op">.</span>get<span class="op">()};</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><a
+href="https://godbolt.org/z/e13hrW7jG">https://godbolt.org/z/e13hrW7jG</a></p>
+<ul>
+<li>What code should that generate?</li>
+<li>What code does that generate?</li>
+</ul>
+</section>
+<section id="inlining-example-are-we-done" class="slide level2">
+<h2>Inlining Example: Are we Done?</h2>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> StrongAlias <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">inline</span> StrongAlias<span class="op">(</span><span class="at">const</span> T<span class="op">&amp;</span>val<span class="op">):</span> _v<span class="op">(</span>val<span class="op">)</span> <span class="op">{}</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">inline</span> T<span class="op">&amp;</span> get<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _v<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    T _v<span class="op">;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Meter <span class="op">=</span> StrongAlias<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Seconds <span class="op">=</span> StrongAlias<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MeterPerSecond <span class="op">=</span> StrongAlias<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>MeterPerSecond calc_speed<span class="op">(</span>Meter distance<span class="op">,</span> Seconds time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> MeterPerSecond<span class="op">{</span>distance<span class="op">.</span>get<span class="op">()</span> <span class="op">/</span> time<span class="op">.</span>get<span class="op">()};</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Are we done?</p>
+<div>
+<ul>
+<li class="fragment">No, <code>calc_speed</code> suffers from the
+<em>exact</em> same problem.</li>
+<li class="fragment"><em>Inlining is a multi-layer problem.</em></li>
+</ul>
+</div>
+</section>
+<section id="do-we-need-to-do-this-manually" class="slide level2">
+<h2>Do we Need to do this Manually?!</h2>
+<p>Myth: “inline is just a hint; the compiler knows best”</p>
+<p>Reality: one of the most important things to understand</p>
+<ul>
+<li><em>Of course</em>, compiler must be able to inline in the first
+place, i.e. define function in header</li>
+<li>What else matters?</li>
+</ul>
+</section>
+<section id="what-inline-means-odr-vs.-inline" class="slide level2">
+<h2>What inline means: ODR vs. “inline”</h2>
+<p>There are two distinct effects of the inline keyword if it is applied
+to functions:</p>
+<ol type="1">
+<li>Exempt the function from the One Definition Rule</li>
+<li>A hint for the compiler that “the body is supposed to be copied to
+the call site”. This is not required by the standard.</li>
+</ol>
+<blockquote>
+<p>Every function must be defined exactly once. Exempt from this rule
+are templates and inline functions.</p>
+</blockquote>
+<p>– One Definition Rule</p>
+</section>
+<section id="is-inlining-required" class="slide level2">
+<h2>Is Inlining Required?</h2>
+<p>Compiler philosophy</p>
+<table>
+<thead>
+<tr class="header">
+<th>“Don’t inline if not marked as such”</th>
+<th>“Inline is automatic”</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Keyword used for ODR <em>and</em> inlining</td>
+<td>Keyword only used for ODR</td>
+</tr>
+</tbody>
+</table>
+<p>Deep call hierarchies might still need manual inlining <em>in either
+case</em>.</p>
+</section>
+<section id="what-to-inline-1" class="slide level2">
+<h2>What to Inline? (1)</h2>
+<ol type="1">
+<li><p>Know the overhead of calling a function.</p>
+<ul>
+<li>E.g.: x86-64 typically 5 Bytes for the call, 3 Bytes per scalar
+argument that needs to be put into the right register.</li>
+<li>A very simple rule of thumb is to try to inline every function that
+is smaller than <code>5 + 3 * NARG</code> Bytes.</li>
+<li>You can omit “sink” arguments in the count, i.e. data that is not
+needed anymore after the call.</li>
+<li>Remember “this” is an implicit argument to any member function, as
+are large return values</li>
+</ul></li>
+</ol>
+<p>(Adapt this model as you learn more!)</p>
+</section>
+<section id="what-to-inline-2" class="slide level2">
+<h2>What to Inline? (2)</h2>
+<ol start="2" type="1">
+<li><p>Get a list of all functions sorted by size.</p>
+<ul>
+<li>Mapfiles</li>
+<li>Coreutils NM, GHS gfunsize, bloaty, etc.</li>
+<li>Possibly: some post-processing to sort by size</li>
+</ul></li>
+</ol>
+<p><img data-src="img/inline-candidates.png" style="width:70.0%" /></p>
+<p>(Attention: Many architectures need functions to be aligned and atop
+that many compilers align them additionally for performance reasons.
+Thus, functions can have trailing padding! The tool you choose should
+optimally not count these towards the function size.)</p>
+</section>
+<section id="what-to-inline-3" class="slide level2">
+<h2>What to Inline? (3)</h2>
+<ol start="3" type="1">
+<li>Starting with the smallest, inline the functions.
+<ul>
+<li>Move from CPP to HPP and declare inline,</li>
+<li>Build and verify ROM got smaller,</li>
+<li>Repeat by getting a new list (2) and/or refine your cost model
+(1)</li>
+</ul></li>
+</ol>
+</section>
+<section id="parameter-passing-cost" class="slide level2">
+<h2>Parameter Passing: Cost</h2>
+<p>Let’s say, we pass integers.</p>
+<ul>
+<li>Some arguments can go to registers (depends on ABI)</li>
+<li>Excess arguments go to stack</li>
+</ul>
+<p>=&gt; Get rid of unused parameters</p>
+</section>
+<section id="parameter-passing-cost-1" class="slide level2">
+<h2>Parameter Passing: Cost</h2>
+<p>By reference or by value?</p>
+<ul>
+<li>ABI dictates what types (dependent on size and layout) are passed
+how.</li>
+<li>Typically 8-16 Byte types are passable in registers (2-4
+registers)</li>
+<li>Some architectures have separate data &amp; pointer registers
+(e.g. TriCore).</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>By value</th>
+<th>By reference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>small</td>
+<td>Reg/stack</td>
+<td>Move to stack &amp; pass pointer</td>
+</tr>
+<tr class="even">
+<td>large</td>
+<td>Copy to stack &amp; pass pointer</td>
+<td>Pointer in reg/stack</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>(Assuming small value is in register, large value in memory.)</p>
+</section>
+<section id="parameter-passing-general-rules" class="slide level2">
+<h2>Parameter Passing: General Rules</h2>
+<ul>
+<li>Pass integers, floats, etc. by value</li>
+<li>Pass small structs (e.g. <code>Vector2d</code>) by value
+<em>unless</em> they have a copy constructor
+(e.g. <code>std::string</code>).</li>
+<li>Keep an eye on the total register count used for parameters</li>
+<li>On TriCore: Do this for both, data arguments and pointer
+arguments</li>
+<li>Up to 2 implicit pointer arguments: <code>this</code>, large return
+values</li>
+</ul>
+</section>
+<section id="parameter-passing-inlining-can-help" class="slide level2">
+<h2>Parameter Passing: Inlining <strong>CAN</strong> Help</h2>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> add<span class="op">(</span><span class="at">const</span> <span class="dt">float</span><span class="op">&amp;,</span> <span class="at">const</span> <span class="dt">float</span><span class="op">&amp;);</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> foo<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> add<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">);</span> <span class="op">}</span></span></code></pre></div>
+<p>What’s the codegen of <code>foo</code>?</p>
+<div>
+<ul>
+<li class="fragment">Move literal <code>2</code> to stack, move literal
+<code>1</code> to stack, pass pointers to <code>add</code></li>
+<li class="fragment">Inlining and consequent compiler optimization
+typically remedy cost like this!</li>
+<li class="fragment">Exotic compilers can have issues with omitting
+loads &amp; stores from inlining reference arguments.</li>
+</ul>
+</div>
+</section>
+<section id="when-not-to-inline" class="slide level2">
+<h2>When <strong>NOT</strong> to Inline?</h2>
+<p>The misconception “inline increases ROM consumption” <em>can</em> be
+true!</p>
+<!---
+![](img/no-inline.png){width=80%}
+--->
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> InterfaceRegistry <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    T<span class="op">*</span> <span class="va">m_ptr</span><span class="op">;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> register_interface<span class="op">(</span>T<span class="op">*</span> ptr<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">m_ptr</span> <span class="op">=</span> ptr<span class="op">;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span><span class="va">m_ptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>            set_error<span class="op">(</span>C_REGISTRY<span class="op">,</span> C_REGISTER_CALL<span class="op">,</span> C_CRITICAL<span class="op">,</span> <span class="st">&quot;ptr is null&quot;</span><span class="op">);</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="kw">class</span> InterfaceRegistry<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;;</span></span></code></pre></div>
+<ul>
+<li>Central abstraction</li>
+<li>Instantiated hundreds of times with different types</li>
+</ul>
+<p><a
+href="https://godbolt.org/z/jh16s7G66">https://godbolt.org/z/jh16s7G66</a></p>
+<div>
+<ul>
+<li class="fragment">18 bytes of instructions (movX) that load some
+error constants in the non-happy path</li>
+</ul>
+</div>
+</section>
+<section id="when-not-to-inline-1" class="slide level2">
+<h2>When <strong>NOT</strong> to Inline?</h2>
+<p>What to do?</p>
+<ul>
+<li>“Out”-line: Factor out the set_error call, and mark it as “no
+inline”</li>
+<li>Inlining for ROM reduction is not trivial (just as with runtime
+performance)</li>
+</ul>
+<p>How to detect?</p>
+<ul>
+<li>Detection of “out-lining” much harder than “inlining”</li>
+<li>Use bloaty to sum up templates and check big entries manually</li>
+<li>Any other proposals?</li>
+</ul>
+</section>
+<section id="constant-propagation" class="slide level2">
+<h2>Constant Propagation</h2>
+<p>Compilers can do magic if constants are involved</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a <span class="op">=</span> b <span class="op">/</span> <span class="dv">871234</span><span class="op">;</span></span></code></pre></div>
+<p>vs.</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a <span class="op">=</span> my_divide<span class="op">(</span>b<span class="op">,</span> <span class="dv">871234</span><span class="op">);</span></span></code></pre></div>
+<p><a
+href="https://godbolt.org/z/sdo1d6brv">https://godbolt.org/z/sdo1d6brv</a></p>
+</section>
+<section id="constant-prop-fullpartial-folding" class="slide level2">
+<h2>Constant Prop: Full/partial folding</h2>
+<p>Fold complete computation at compilation time</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> factorial<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">}</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="at">extern</span> <span class="dt">int</span> N<span class="op">;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> foo<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> factorial<span class="op">(</span>N<span class="op">);</span> <span class="op">}</span></span></code></pre></div>
+<p>vs.</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> factorial<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">}</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">int</span> N <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> foo<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> factorial<span class="op">(</span>N<span class="op">);</span> <span class="op">}</span></span></code></pre></div>
+<p><a
+href="https://godbolt.org/z/fdWYfGfe7">https://godbolt.org/z/fdWYfGfe7</a></p>
+<p>(Also partial compile-time evaluation possible, see e.g. <a
+href="https://godbolt.org/z/fbxsoPnse">https://godbolt.org/z/fbxsoPnse</a>)</p>
+</section>
+<section id="constant-prop.-at-callee-site" class="slide level2">
+<h2>Constant Prop. at Callee Site</h2>
+<p>No need for inlining. If all callers pass the same arguments,
+consider making them constants:</p>
+<ul>
+<li>Control flow optimizations</li>
+<li>(Partially) precompute at runtime</li>
+<li>Peephole optimizations</li>
+<li>…</li>
+</ul>
+</section>
+<section id="constant-prop.-at-callee-site-1" class="slide level2">
+<h2>Constant Prop. at Callee Site</h2>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> clamp<span class="op">(</span><span class="dt">int</span> value<span class="op">,</span> <span class="dt">int</span> min<span class="op">,</span> <span class="dt">int</span> max<span class="op">)</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>value <span class="op">&gt;=</span> max<span class="op">)</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> max<span class="op">;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>value <span class="op">&lt;=</span> min<span class="op">)</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> min<span class="op">;</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> value<span class="op">;</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><a
+href="https://godbolt.org/z/9TxxrWaqK">https://godbolt.org/z/9TxxrWaqK</a></p>
+<ul>
+<li>Example: clamp values to [-128, 127] in int8 neural network.</li>
+<li>Not a single call with <code>max != 127 || min != -128</code></li>
+</ul>
+<div>
+<ul>
+<li class="fragment">Declare <code>max</code> and <code>min</code> as
+constants</li>
+<li class="fragment">Hundreds of Bytes ROM saved (inlined into many
+places)</li>
+<li class="fragment">~3% of runtime</li>
+</ul>
+</div>
+<!---
+![](img/const-prop.png)
+--->
+</section>
+<section id="data-initialization" class="slide level2">
+<h2>Data Initialization</h2>
+<p>What can a compiler translate this to?</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="dt">size_t</span> N<span class="op">&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Container <span class="op">{</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  T data<span class="op">[</span>N<span class="op">];</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">float</span> a<span class="op">{</span><span class="fl">1.4258</span><span class="bu">F</span><span class="op">},</span> b<span class="op">{</span><span class="fl">2342.235</span><span class="bu">F</span><span class="op">},</span> c<span class="op">{</span><span class="fl">34213.3</span><span class="bu">F</span><span class="op">},</span> d<span class="op">{-</span><span class="fl">4.2243</span><span class="bu">F</span><span class="op">};</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="co">// What does the initialization look like?</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>Container<span class="op">&lt;</span>Data<span class="op">,</span> <span class="dv">100</span><span class="op">&gt;</span> c<span class="op">{};</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>Container<span class="op">&lt;</span>Data<span class="op">,</span> <span class="dv">100</span><span class="op">&gt;</span> foo<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="data-initialization-1" class="slide level2">
+<h2>Data Initialization</h2>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="dt">size_t</span> N<span class="op">&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Container <span class="op">{</span> T data<span class="op">[</span>N<span class="op">];</span> <span class="op">};</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span> <span class="dt">float</span> a<span class="op">{</span><span class="fl">1.4258</span><span class="bu">F</span><span class="op">},</span> b<span class="op">{</span><span class="fl">2342.235</span><span class="bu">F</span><span class="op">},</span> c<span class="op">{</span><span class="fl">34213.3</span><span class="bu">F</span><span class="op">},</span> d<span class="op">{-</span><span class="fl">4.2243</span><span class="bu">F</span><span class="op">};</span> <span class="op">};</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>Container<span class="op">&lt;</span>Data<span class="op">,</span> <span class="dv">100</span><span class="op">&gt;</span> c<span class="op">{};</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>Container<span class="op">&lt;</span>Data<span class="op">,</span> <span class="dv">100</span><span class="op">&gt;</span> foo<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">{};</span> <span class="op">}</span></span></code></pre></div>
+<p>Compiler must pick a trade-off (different resources requirements for
+each variant):</p>
+<ol type="1">
+<li>Lay out full pattern (400 floats) in ROM &amp; copy it</li>
+<li>Lay out single pattern (4 floats) in ROM and copy 100 times</li>
+<li>Create 4 floats from code onto stack (or first element) and copy 100
+times</li>
+<li>Create 4 floats from code in registers and store 100 times</li>
+<li>…?</li>
+</ol>
+<p>Additionally: Is there function calls (Constructor, memcpy)?</p>
+</section>
+<section id="data-initialization-examples" class="slide level2">
+<h2>Data Initialization: Examples</h2>
+<p>GCC 15.2: <a
+href="https://godbolt.org/z/xPf1Y6vve">https://godbolt.org/z/xPf1Y6vve</a></p>
+<ul>
+<li>Full pattern for global</li>
+<li>Single pattern and store it 100 times</li>
+</ul>
+<p>TI CL430 21.6.1: <a
+href="https://godbolt.org/z/4r5Mb6M7e">https://godbolt.org/z/4r5Mb6M7e</a></p>
+<ul>
+<li>Full pattern for global</li>
+<li><em>Second</em> full pattern for local, (no RVO)</li>
+</ul>
+<p>Clang:</p>
+<ul>
+<li>Zero initialization before pattern</li>
+</ul>
+</section>
+<section id="data-initialization-more-complicated-example"
+class="slide level2">
+<h2>Data Initialization: More Complicated Example</h2>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="dt">size_t</span> N<span class="op">&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Container <span class="op">{</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  T data<span class="op">[</span>N<span class="op">];</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">size_t</span> argmax<span class="op">;</span>    <span class="co">// !</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">float</span> a<span class="op">{</span><span class="fl">1.4258</span><span class="bu">F</span><span class="op">},</span> b<span class="op">{</span><span class="fl">2342.235</span><span class="bu">F</span><span class="op">},</span> c<span class="op">{</span><span class="fl">34213.3</span><span class="bu">F</span><span class="op">},</span> d<span class="op">{-</span><span class="fl">4.2243</span><span class="bu">F</span><span class="op">};</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="co">// What does the initialization look like?</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>Container<span class="op">&lt;</span>Data<span class="op">,</span> <span class="dv">100</span><span class="op">&gt;</span> c<span class="op">{};</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>Container<span class="op">&lt;</span>Data<span class="op">,</span> <span class="dv">100</span><span class="op">&gt;</span> foo<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> <span class="op">{};</span> <span class="op">}</span></span></code></pre></div>
+<ul>
+<li>What happens now?</li>
+</ul>
+</section>
+<section id="data-initialization-more-complicated-example-1"
+class="slide level2">
+<h2>Data Initialization: More Complicated Example</h2>
+<ul>
+<li>Omit in init list: default initialization</li>
+<li><code>()</code> value initialization / constructor call</li>
+<li><code>{}</code> value initialization / constructor call / aggregate
+initialization</li>
+</ul>
+<p><code>{}</code> is at least zero-initialization (guaranteed). Might
+add additional overhead, especially in nested structures!</p>
+<p>Especially check these:</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>MyClass<span class="op">::</span>MyClass<span class="op">()</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> deeply_nested_member<span class="op">{}</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">,</span> other_deeply_nested_member<span class="op">{}</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">{}</span></span></code></pre></div>
+</section>
+<section id="data-initialization-circumventing-large-patterns"
+class="slide level2">
+<h2>Data Initialization: Circumventing Large Patterns</h2>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  Data<span class="op">();</span>               <span class="co">// no longer trivial</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">float</span> a<span class="op">{</span><span class="fl">1.4258</span><span class="bu">F</span><span class="op">};</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">float</span> b<span class="op">{</span><span class="fl">2342.235</span><span class="bu">F</span><span class="op">};</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">float</span> c<span class="op">{</span><span class="fl">34213.3</span><span class="bu">F</span><span class="op">};</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">float</span> d<span class="op">{-</span><span class="fl">4.2243</span><span class="bu">F</span><span class="op">};</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<ul>
+<li><code>Data{}</code> is now a constructor call</li>
+<li>Constructor not inlined anymore, i.e. array constructor
+<ul>
+<li>Calls 100 constructors, or</li>
+<li>Calls 1 constructor and 99 copies</li>
+</ul></li>
+<li>Can be slower</li>
+</ul>
+</section>
+<section id="data-initialization-uninitialized-data"
+class="slide level2">
+<h2>Data Initialization: Uninitialized Data</h2>
+<p>If you have nested structures, changing <code>Data</code> alone might
+not suffice</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>Container<span class="op">&lt;</span>Data<span class="op">,</span> <span class="dv">100</span><span class="op">&gt;</span> c<span class="op">{};</span></span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">,</span> <span class="dt">size_t</span> N<span class="op">&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Container <span class="op">{</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  Container<span class="op">():</span> argmax<span class="op">{</span><span class="dv">0</span><span class="op">}</span> <span class="op">{}</span>  <span class="co">// Add that</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  T data<span class="op">[</span>N<span class="op">];</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">size_t</span> argmax<span class="op">;</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<ul>
+<li><code>Container&lt;int, 100&gt; c{};</code> is no longer initialized
+(besides the <code>argmax</code> member).</li>
+</ul>
+<p>=&gt; Might be issue for projects that use bit-identity comparisons
+on the whole memory.</p>
+</section>
+<section id="non-trivial-structures" class="slide level2">
+<h2>Non-Trivial Structures</h2>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SensorDetection <span class="op">{</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    SensorDetection<span class="op">();</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    SensorDetection<span class="op">(</span><span class="at">const</span> SensorDetection<span class="op">&amp;);</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">~</span>SensorDetection<span class="op">();</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> coordinate<span class="op">;</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> signal_strength<span class="op">;</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> sense<span class="op">(</span>SensorDetection<span class="op">&amp;</span> result<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    SensorDetection c<span class="op">,</span> d<span class="op">;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> compute<span class="op">();</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> compute_other<span class="op">();</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> some_condition<span class="op">?</span> d<span class="op">:</span> c<span class="op">;</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Inlining can definitely help</li>
+<li>Some compilers may not be able to fully optimize away all
+overheads</li>
+</ul>
+<p><a
+href="https://godbolt.org/z/6zzvxe9q5">https://godbolt.org/z/6zzvxe9q5</a></p>
+</section>
+<section id="trivial-structures" class="slide level2">
+<h2>Trivial Structures</h2>
+<p>Empirical observations:</p>
+<ul>
+<li>Most initialization (besides constants) is to zero and overwritten
+later again</li>
+<li>Most classes do not do resource management: Compiler can decide how
+to copy</li>
+<li>…: No destruction required</li>
+</ul>
+<p>=&gt; Make structures trivial</p>
+</section>
+<section id="how-to-make-a-structure-trivial" class="slide level2">
+<h2>How to Make a Structure Trivial?</h2>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> NotTrivial <span class="op">{</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    NotTrivial<span class="op">();</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>NotTrivial<span class="op">::</span>NotTrivial<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> NotTrivial <span class="op">{</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    NotTrivial<span class="op">()</span> <span class="op">{}</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>No (user provided in both cases)</p>
+</section>
+<section id="how-to-make-a-structure-trivial-1" class="slide level2">
+<h2>How to Make a Structure Trivial?</h2>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Trivial <span class="op">{</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    Trivial<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Trivial <span class="op">{</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>Rule of 0. Do not define any constructor, destructor, assignment
+operator, etc.</p>
+<p>Compiler behavior varies. Check yours!</p>
+</section>
+<section id="streamline-data-transformation" class="slide level2">
+<h2>Streamline Data Transformation</h2>
+<p>Example: linear interpolation between two points</p>
+<!---
+![](img/bad-code-reuse.png)
+--->
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> ExtrapolationMode <span class="op">{</span> Zero<span class="op">,</span> Constant<span class="op">,</span> Linear<span class="op">};</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> piecewiseInterpolationWithExtrapolation<span class="op">(</span>  <span class="co">// existing generic function</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="op">*</span>xs<span class="op">,</span> <span class="dt">float</span> <span class="op">*</span>ys<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">,</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x<span class="op">,</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    ExtrapolationMode ep<span class="op">);</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span> <span class="dt">float</span> x<span class="op">,</span> y<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> interpolateTwoPoints<span class="op">(</span>Point p0<span class="op">,</span> Point p1<span class="op">,</span> <span class="dt">float</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> xs<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span>p0<span class="op">.</span>x<span class="op">,</span> p1<span class="op">.</span>x<span class="op">};</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> ys<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span>p0<span class="op">.</span>y<span class="op">,</span> p1<span class="op">.</span>y<span class="op">};</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> piecewiseInterpolationWithExtrapolation<span class="op">(</span>xs<span class="op">,</span> ys<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> x<span class="op">,</span></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>                <span class="co">/* unused */</span> ExtrapolationMode<span class="op">::</span>Constant<span class="op">);</span></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><a
+href="https://godbolt.org/z/KE38r77bj">https://godbolt.org/z/KE38r77bj</a></p>
+</section>
+<section id="streamline-data-transformation-1" class="slide level2">
+<h2>Streamline Data Transformation</h2>
+<p>Two choices:</p>
+<ul>
+<li>Base on generic function, need to satisfy its interface</li>
+<li>Implement yourself, need to do it correct :)</li>
+</ul>
+<p>How to detect?</p>
+<ul>
+<li>Copy data around just to satisfy an interface</li>
+<li>Pass constants to an interface that specify things you never
+use.</li>
+</ul>
+</section>
+<section id="data-transformation-even-worse" class="slide level2">
+<h2>Data Transformation: Even worse</h2>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> implementation_detail<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span>Data<span class="op">&gt;&amp;</span> data<span class="op">);</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> function<span class="op">(</span><span class="bu">std::</span>list<span class="op">&lt;</span>Data<span class="op">&gt;&amp;</span> data<span class="op">)</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> </span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Data<span class="op">&gt;</span> vecdata<span class="op">{</span>data<span class="op">.</span>begin<span class="op">(),</span> data<span class="op">.</span>end<span class="op">()};</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    implementation_detail<span class="op">(</span>vecdata<span class="op">);</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><a
+href="https://godbolt.org/z/Paf1T1M98">https://godbolt.org/z/Paf1T1M98</a></p>
+<ul>
+<li>Can easily be hundreds of Bytes in ROM</li>
+<li>If you need to copy around data to satisfy an interface, it’s not
+the right interface to use at this point!</li>
+<li>If the design says that <code>function</code> has to call
+<code>implementation_detail</code> to do something, it’s a bug in the
+design.</li>
+</ul>
+<p>This pattern also consumes stack and runtime.</p>
+</section>
+<section id="code-bloat-templates" class="slide level2">
+<h2>Code Bloat Templates</h2>
+<p>Be careful with templates.</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> C<span class="op">&gt;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> C<span class="op">::</span><span class="dt">value_type</span> best<span class="op">(</span><span class="at">const</span> C<span class="op">&amp;</span> c<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">typename</span> C<span class="op">::</span><span class="dt">value_type</span> result<span class="op">{};</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span><span class="op">&amp;&amp;</span> e <span class="op">:</span> c<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>e <span class="op">&gt;</span> result<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>      result <span class="op">=</span> e<span class="op">;</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">int</span> best<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dv">100</span><span class="op">&gt;&amp;);</span></span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">int</span> best<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dv">200</span><span class="op">&gt;&amp;);</span></span></code></pre></div>
+<p><a
+href="https://gcc.godbolt.org/z/KcrPsear7">https://gcc.godbolt.org/z/KcrPsear7</a></p>
+<ul>
+<li>Almost exact same code, but for different size</li>
+</ul>
+<p>How to detect?</p>
+<ul>
+<li>Bloaty has mode to sum all template instances into the same mangled
+<code>best</code> “function”.</li>
+</ul>
+</section>
+<section id="de-templatify" class="slide level2">
+<h2>De-templatify</h2>
+<ul>
+<li>Move logic to generic non-template function (if impossible, then at
+least fewer template parameters)</li>
+</ul>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">// actual logic goes here</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> It<span class="op">&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> best<span class="op">(</span>It first<span class="op">,</span> It last<span class="op">)</span> <span class="op">-&gt;</span> <span class="kw">typename</span> <span class="bu">std::</span>iterator_traits<span class="op">&lt;</span>It<span class="op">&gt;::</span><span class="dt">value_type</span><span class="op">;</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> C<span class="op">&gt;</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> C<span class="op">::</span><span class="dt">value_type</span> best<span class="op">(</span><span class="at">const</span> C<span class="op">&amp;</span> c<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// only determines the range, i.e. evaluates the capacity parameter</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> best<span class="op">(</span>c<span class="op">.</span>begin<span class="op">(),</span> c<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">int</span> best<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dv">100</span><span class="op">&gt;&amp;);</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">int</span> best<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">int</span><span class="op">,</span> <span class="dv">200</span><span class="op">&gt;&amp;);</span></span></code></pre></div>
+<p><a
+href="https://gcc.godbolt.org/z/1h4Yj867n">https://gcc.godbolt.org/z/1h4Yj867n</a></p>
+</section></section>
+<section>
+<section id="part-3-ram-optimization" class="title-slide slide level1">
+<h1>Part 3: RAM Optimization</h1>
+
+</section>
+<section id="main-contributors-to-ram-consumption" class="slide level2">
+<h2>Main Contributors to RAM Consumption</h2>
+<ul>
+<li>Global variables (.data &amp; .bss)</li>
+<li>(User) stack (.ustack)</li>
+</ul>
+<p>.data is also ROM consumption!</p>
+<p>What we’ll be looking at:</p>
+<ul>
+<li>Padding</li>
+<li>Data Sizes</li>
+<li>Virtual Inheritance</li>
+<li>Separation of Concerns</li>
+<li>Stack</li>
+</ul>
+</section>
+<section id="whats-the-ram-issue" class="slide level2">
+<h2>What’s the RAM issue?</h2>
+<p>Blow-up due to multi-dimensional arrays through the type
+hierarchy.</p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">int32_t</span> Coord1D<span class="op">;</span>                    <span class="co">//    4 Byte</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Coord4D <span class="op">=</span> <span class="bu">std::</span>array<span class="op">&lt;</span>Coord1D<span class="op">,</span> <span class="dv">4</span><span class="op">&gt;;</span>     <span class="co">//   16 Byte</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Polyline <span class="op">=</span> <span class="bu">std::</span>array<span class="op">&lt;</span>Coord4D<span class="op">,</span> <span class="dv">256</span><span class="op">&gt;;</span>  <span class="co">// 4096 Byte</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Truck <span class="op">{</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span>Polyline<span class="op">,</span> <span class="dv">32</span><span class="op">&gt;</span> possible_routes<span class="op">;</span> <span class="co">// 130 kB</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> TrafficParticipants <span class="op">{</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span>Truck<span class="op">,</span> <span class="dv">64</span><span class="op">&gt;</span> trucks<span class="op">;</span>             <span class="co">// 8 MB</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Global variable somewhere:</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> CommunicationBuffer <span class="op">=</span> TrafficParticipants<span class="op">;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>array<span class="op">&lt;</span>CommunicationBuffer<span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> bufferedCommCPU0toCPU2<span class="op">;</span>  <span class="co">// 24 MB</span></span></code></pre></div>
+<p>General rule:</p>
+<ul>
+<li>Look for this blow-up and check the fundamental building blocks used
+there.</li>
+</ul>
+</section>
+<section id="data-size-of-fundamental-types" class="slide level2">
+<h2>Data Size of Fundamental Types</h2>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Direction <span class="op">{</span> LEFT<span class="op">,</span> RIGHT<span class="op">,</span> UNKNOWN <span class="op">};</span></span></code></pre></div>
+<ul>
+<li>How many Bytes does this occupy?</li>
+<li>Check and make sure!</li>
+</ul>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> Direction<span class="op">:</span> <span class="dt">uint8_t</span> <span class="op">{</span> LEFT<span class="op">,</span> RIGHT<span class="op">,</span> UNKNOWN <span class="op">};</span></span></code></pre></div>
+<p>Clear.</p>
+<p>Think of the domain of values you want to store and choose an
+appropriate type.</p>
+</section>
+<section id="composite-types-sum-or-product" class="slide level2">
+<h2>Composite Types: Sum or Product?</h2>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> VehicleType <span class="op">{</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isTruck<span class="op">;</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isCar<span class="op">;</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isBike<span class="op">;</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isPedestrian<span class="op">;</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isCat<span class="op">;</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* ... */</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>Make clear if the domain is a sum or a product.</p>
+<ul>
+<li>In case of sums: Use enum (&amp; union) / std::variant</li>
+<li>In case of products: Use bitfield / bitset</li>
+</ul>
+</section>
+<section id="composite-types-minimal" class="slide level2">
+<h2>Composite Types: Minimal</h2>
+<p>Get rid of inconsistencies that store information several times</p>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Speed <span class="op">{</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> vector<span class="op">;</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> magnitude<span class="op">;</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">enum</span> direction <span class="op">{</span> FORWARD<span class="op">,</span> BACKWARD<span class="op">,</span> NONE <span class="op">};</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>What’s wrong here? How big is this type?</p>
+<div>
+<ul>
+<li class="fragment">3x direction information?! (vector, magnitude and
+enum)</li>
+<li class="fragment">Duplication of magnitude? Or is <code>vector</code>
+a unit vector?</li>
+<li class="fragment">20 Byte: 4 floats + enum + padding to 4 Byte</li>
+</ul>
+</div>
+</section>
+<section id="composite-types-minimal-1" class="slide level2">
+<h2>Composite Types: Minimal</h2>
+<p>Get rid of inconsistencies that store information several times</p>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Probabilities <span class="op">{</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> isTruck<span class="op">;</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> isCar<span class="op">;</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> isOther<span class="op">;</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>What’s wrong here? How big is this type?</p>
+<div>
+<ul>
+<li class="fragment">Mathematical duplication
+(<code>isOther == 1 - isTruck - isCar</code>)?</li>
+<li class="fragment">3 floats</li>
+</ul>
+</div>
+</section>
+<section id="composite-types-minimal-2" class="slide level2">
+<h2>Composite Types: Minimal</h2>
+<p>Get rid of inconsistencies that store information several times</p>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Direction <span class="op">{</span> LEFT<span class="op">,</span> RIGHT<span class="op">,</span> UNKNOWN <span class="op">};</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span>Direction<span class="op">&gt;</span> d<span class="op">;</span></span></code></pre></div>
+<p>What’s wrong here? How big is this type?</p>
+<div>
+<ul>
+<li class="fragment">Duplication of “unknown” state: enum and empty
+optional</li>
+<li class="fragment">8 Byte on ARMv7 with GCC (default options)!</li>
+</ul>
+</div>
+</section>
+<section id="composite-types-minimal-3" class="slide level2">
+<h2>Composite Types: Minimal</h2>
+<p>Get rid of inconsistencies that store information several times</p>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DirectionData <span class="op">{</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    Direction d<span class="op">;</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>Velocity<span class="op">&gt;</span> v<span class="op">;</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>Acceleration<span class="op">&gt;</span> a<span class="op">;</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>What’s wrong here? How big is this type?</p>
+<div>
+<ul>
+<li class="fragment">Unclear if <code>{d, dv, da, dva}</code> are valid
+states or only <code>{d, dva}</code></li>
+<li class="fragment">Is the <code>UNKNOWN</code> direction related to
+the optionals?</li>
+</ul>
+</div>
+</section>
+<section id="composite-types-minimal-4" class="slide level2">
+<h2>Composite Types: Minimal</h2>
+<p>Get rid of inconsistencies that store information several times</p>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SomeData <span class="op">{</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>T<span class="op">*&gt;</span> t<span class="op">;</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SomeOtherData <span class="op">{</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span><span class="bu">std::</span>reference_wrapper<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> t<span class="op">;</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>What’s wrong here? How big is this type?</p>
+<div>
+<ul>
+<li class="fragment">Is a <code>NULL</code> pointer and empty optional
+different states?</li>
+<li class="fragment">8 Byte on ARMv7</li>
+</ul>
+</div>
+</section>
+<section id="composite-types-optionals" class="slide level2">
+<h2>Composite Types: Optionals</h2>
+<p><code>std::optional</code> is especially vulnerable because it is
+easy to overlook. The minimalism problem is <em>not</em> limited to
+<code>std::optional</code>!</p>
+<p>My guardrail:</p>
+<ul>
+<li>Don’t store <code>std::optional</code> in memory. Use it as
+interface type only.</li>
+<li>Don’t have multiple <code>std::optional</code> in the same
+struct.</li>
+<li>Don’t use it with pointers or references.</li>
+</ul>
+</section>
+<section id="padding" class="slide level2">
+<h2>Padding</h2>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x00 */</span> <span class="dt">uint32_t</span> a<span class="op">;</span>   <span class="co">// 4 Byte</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x04  -- 4 Byte padding */</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x08 */</span> <span class="dt">uint64_t</span> b<span class="op">;</span>   <span class="co">// 8 Byte</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x10 */</span> <span class="dt">uint8_t</span> c<span class="op">;</span>    <span class="co">// 1 Byte</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x11  -- 7 Byte padding */</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x18 */</span> <span class="dt">uint64_t</span> d<span class="op">;</span>   <span class="co">// 8 Byte</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x20 */</span> <span class="dt">uint8_t</span> e<span class="op">;</span>    <span class="co">// 1 Byte</span></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x21  -- 7 Byte padding */</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Total size: 0x28 = 40 Byte</span></span></code></pre></div>
+<ul>
+<li>22 Byte of data occupy 40 Byte of memory = <strong>45%
+waste</strong></li>
+</ul>
+</section>
+<section id="padding-1" class="slide level2">
+<h2>Padding</h2>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x00 */</span> <span class="dt">uint64_t</span> b<span class="op">;</span>   <span class="co">// 8 Byte</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x08 */</span> <span class="dt">uint64_t</span> d<span class="op">;</span>   <span class="co">// 8 Byte</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x10 */</span> <span class="dt">uint32_t</span> a<span class="op">;</span>   <span class="co">// 4 Byte</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x14 */</span> <span class="dt">uint8_t</span> c<span class="op">;</span>    <span class="co">// 1 Byte</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x15 */</span> <span class="dt">uint8_t</span> e<span class="op">;</span>    <span class="co">// 1 Byte</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* 0x16  -- 2 Byte padding */</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Total size: 0x18 = 24 Byte</span></span></code></pre></div>
+<ul>
+<li>22 Byte of data occupy 24 Byte of memory = 8.5% waste</li>
+</ul>
+<p>Rule:</p>
+<ul>
+<li>Always sort struct members by size (descending), unless you have a
+good reason.</li>
+<li>Deep struct nesting is considered harmful because it makes it
+unnecessarily hard to do this.</li>
+</ul>
+</section>
+<section id="dont-automatic-packing" class="slide level2">
+<h2>DON’T: Automatic packing</h2>
+<p>“Do I really need to reorder the attributes? There’s this convenient
+pragma…”</p>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ex">__attribute__((packed))</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> a<span class="op">;</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint64_t</span> b<span class="op">;</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> c<span class="op">;</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint64_t</span> d<span class="op">;</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> e<span class="op">;</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<ul>
+<li>This is for a <em>different</em> purpose (model HW frames)</li>
+<li><strong>DO NOT</strong> use it for struct packing to save ROM,
+conversely get rid of it if you see it (without a reason)</li>
+</ul>
+</section>
+<section id="dont-automatic-packing-1" class="slide level2">
+<h2>DON’T: Automatic packing</h2>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="ex">__attribute__((packed))</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Data <span class="op">{</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> a<span class="op">;</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint64_t</span> b<span class="op">;</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> c<span class="op">;</span></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint64_t</span> d<span class="op">;</span></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> e<span class="op">;</span></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a><span class="dt">uint64_t</span> get_d<span class="op">(</span>Data <span class="op">*</span>d<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> d<span class="op">-&gt;</span>d<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<p><a
+href="https://godbolt.org/z/sx47YTrhK">https://godbolt.org/z/sx47YTrhK</a></p>
+<p>Unaligned data will either give</p>
+<ul>
+<li>Unaligned memory accesses (slow, LSU breaks it down into multiple
+loads &amp; stores)</li>
+<li>Manual stitching together the value from aligned accesses (slow +
+ROM overhead)</li>
+</ul>
+</section>
+<section id="virtual-inheritance" class="slide level2">
+<h2>(Virtual) Inheritance</h2>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> A <span class="op">{</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="dt">void</span> fn1<span class="op">();</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="dt">void</span> fn2<span class="op">();</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> member1<span class="op">;</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<pre class="text"><code>                            Class A&#39;s vtbl (.rodata)
+                            +--------------------+
+                            | ...                |
+                            +--------------------+      +-----+
+Object of type A:           | typeinfo ptr       | ---&gt; | ... | ---&gt; ...
++-----------+               +--------------------+      +-----+
+| vptr      | ------------&gt; | ptr to virtual fn1 |
++-----------+               +--------------------+
+| member1   |               | ptr to virtual fn2 |
++-----------+               +--------------------+
+| ...       |               | ...                |
++-----------+               +--------------------+</code></pre>
+<p>(simplified)</p>
+<ul>
+<li>With multiple inheritance, you get multiple vptrs</li>
+</ul>
+</section>
+<section id="effects-of-virtual-inheritance" class="slide level2">
+<h2>Effects of Virtual Inheritance</h2>
+<ul>
+<li>Inline boundary
+<ul>
+<li>Stops all other cross-function optimizations of the compiler</li>
+</ul></li>
+</ul>
+<p>Rules:</p>
+<ul>
+<li>Get rid of unneeded parents that contain virtual functions</li>
+<li>Get rid of unneeded virtual functions</li>
+<li>If possible, devirtualize functions</li>
+</ul>
+<p>TODO: More here?</p>
+</section>
+<section id="avoid-type-erasure" class="slide level2">
+<h2>Avoid Type Erasure</h2>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MyData <span class="op">{</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    DataClass1 a<span class="op">;</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    DataClass2 b<span class="op">;</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    DataClass3 c<span class="op">;</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    DataClass4 d<span class="op">;</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span>CommonInterface<span class="op">*,</span> <span class="dv">4</span><span class="op">&gt;</span> alldata <span class="op">=</span> <span class="op">{&amp;</span>a<span class="op">,</span> <span class="op">&amp;</span>b<span class="op">,</span> <span class="op">&amp;</span>c<span class="op">,</span> <span class="op">&amp;</span>d<span class="op">};</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Somewhere in the code:</span></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span><span class="op">&amp;</span> data<span class="op">:</span> alldata<span class="op">)</span></span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>    data<span class="op">-&gt;</span>some_function<span class="op">();</span></span></code></pre></div>
+<ul>
+<li>Additional pointers to use loops</li>
+<li>Consumes RAM</li>
+<li>… and ROM due to virtual inheritance from
+<code>CommonInterface</code>.</li>
+</ul>
+<p><a
+href="https://godbolt.org/z/z6GKhh7hG">https://godbolt.org/z/z6GKhh7hG</a></p>
+</section>
+<section id="avoid-type-erasure-1" class="slide level2">
+<h2>Avoid Type Erasure</h2>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MyData <span class="op">{</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    DataClass1 a<span class="op">;</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    DataClass2 b<span class="op">;</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    DataClass3 c<span class="op">;</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    DataClass4 d<span class="op">;</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Somewhere in the code:</span></span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>a<span class="op">.</span>some_function<span class="op">();</span></span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>b<span class="op">.</span>some_function<span class="op">();</span></span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a>c<span class="op">.</span>some_function<span class="op">();</span></span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a>d<span class="op">.</span>some_function<span class="op">();</span></span></code></pre></div>
+<p>What memory do we save?</p>
+</section>
+<section id="avoid-type-erasure-2" class="slide level2">
+<h2>Avoid Type Erasure</h2>
+<div class="sourceCode" id="cb60"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MyData <span class="op">{</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    DataClass1 a<span class="op">;</span> DataClass2 b<span class="op">;</span> DataClass3 c<span class="op">;</span> DataClass4 d<span class="op">;</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Somewhere in the code:</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>a<span class="op">.</span>some_function<span class="op">();</span></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>b<span class="op">.</span>some_function<span class="op">();</span></span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>c<span class="op">.</span>some_function<span class="op">();</span></span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>d<span class="op">.</span>some_function<span class="op">();</span></span></code></pre></div>
+<ul>
+<li>Saves 4*4 Bytes (32-bit pointers) = 16 Bytes RAM for object
+list</li>
+<li>Saves 4*4 Bytes (32-bit pointers) = 16 Bytes RAM for vptrs</li>
+<li>Might save RAM due to less padding within a, b, c, d or in
+<code>MyData</code> because the alignment of a, b, c, d changed.</li>
+<li>Loop will be about as big as the four function calls.</li>
+<li>Saves ROM for all vtables</li>
+<li>Saves ROM in the constructor for initializing the array</li>
+<li>Might save ROM for (empty?) destructor calls</li>
+</ul>
+</section>
+<section id="separation-of-concerns" class="slide level2">
+<h2>Separation of Concerns</h2>
+<p>Assume we have this system:</p>
+<pre class="text"><code>        Sensor    ---&gt;  Preprocessing  ---&gt;  Perception, etc.
+      (Core 0)  --comm--&gt;  (Core 1)  --comm--&gt; (Core 2)</code></pre>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MeasurementData <span class="op">{</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> xyz<span class="op">;</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    Matrix<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> covariances<span class="op">;</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>CommBuf<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>MeasurementData<span class="op">,</span> <span class="dv">1024</span><span class="op">&gt;,</span> <span class="dv">3</span><span class="op">&gt;</span> sensorToPreproc<span class="op">;</span></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>CommBuf<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>MeasurementData<span class="op">,</span> <span class="dv">1024</span><span class="op">&gt;,</span> <span class="dv">3</span><span class="op">&gt;</span> preprocToPerception<span class="op">;</span></span></code></pre></div>
+<p>Assume:</p>
+<ul>
+<li>Sensor measures <code>xyz</code></li>
+<li>Preprocessing component calculates covariances based on system
+state</li>
+</ul>
+</section>
+<section id="effect" class="slide level2">
+<h2>Effect</h2>
+<pre class="text"><code>        Sensor    ---&gt;  Preprocessing  ---&gt;  Perception, etc.
+      (Core 0)  --comm--&gt;  (Core 1)  --comm--&gt; (Core 2)</code></pre>
+<div class="sourceCode" id="cb64"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MeasurementData <span class="op">{</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> xyz<span class="op">;</span></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    Matrix<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> covariances<span class="op">;</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>CommBuf<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>MeasurementData<span class="op">,</span> <span class="dv">1024</span><span class="op">&gt;,</span> <span class="dv">3</span><span class="op">&gt;</span> sensorToPreproc<span class="op">;</span></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>CommBuf<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>MeasurementData<span class="op">,</span> <span class="dv">1024</span><span class="op">&gt;,</span> <span class="dv">3</span><span class="op">&gt;</span> preprocToPerception<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><p>Radar sensor never measures covariances</p></li>
+<li><p>First communication buffer covariances are
+<em>unused</em></p></li>
+<li><p>Blow up: 4 Byte/float * 1024 * 3 = 12 kB/float</p></li>
+<li><p>9 floats * 12 kB/float = 104 kB <em>wasted</em></p></li>
+</ul>
+</section>
+<section id="better-design" class="slide level2">
+<h2>Better Design</h2>
+<pre class="text"><code>    Radar Sensor  ---&gt;  Preprocessing  ---&gt;  Perception, etc.
+      (Core 0)  --comm--&gt;  (Core 1)  --comm--&gt; (Core 2)</code></pre>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Radar Sensor  ---&gt;  Preprocessing</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Meas1 <span class="op">{</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> xyz<span class="op">;</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<div class="sourceCode" id="cb67"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Preprocessing  ---&gt;  Perception</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Meas2 <span class="op">{</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> xyz<span class="op">;</span></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    Matrix<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> covariances<span class="op">;</span></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+</section>
+<section id="removing-redundant-elements" class="slide level2">
+<h2>Removing Redundant Elements</h2>
+<pre class="text"><code>    Radar Sensor  ---&gt;  Preprocessing  ---&gt;  Perception, etc.
+      (Core 0)  --comm--&gt;  (Core 1)  --comm--&gt; (Core 2)</code></pre>
+<div class="sourceCode" id="cb69"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Radar Sensor  ---&gt;  Preprocessing</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Meas1 <span class="op">{</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> xyz<span class="op">;</span></span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<div class="sourceCode" id="cb70"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Preprocessing  ---&gt;  Perception</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Meas2 <span class="op">{</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> xyz<span class="op">;</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">+</span><span class="dv">2</span><span class="op">+</span><span class="dv">1</span><span class="op">&gt;</span> covariances<span class="op">;</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<ul>
+<li>Saves 3 floats (36 kB) because of symmetric matrix</li>
+</ul>
+</section>
+<section id="more-unused-elements" class="slide level2">
+<h2>More Unused Elements?</h2>
+<ul>
+<li>Just because (x, y, z) is <em>the</em> state does not mean all
+states co-vary with each other!</li>
+<li>Let’s hypothetically say, z and (x,y) are completely
+independent</li>
+</ul>
+<div class="sourceCode" id="cb71"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MeasurementData <span class="op">{</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> xyz<span class="op">;</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// v[0]  0    0</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// xyc  v[1]  0</span></span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 0     0  v[2]</span></span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>array<span class="op">&lt;</span><span class="dt">float</span><span class="op">,</span> <span class="dv">3</span><span class="op">&gt;</span> variances<span class="op">;</span></span>
+<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> xycovariance<span class="op">;</span></span>
+<span id="cb71-8"><a href="#cb71-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<ul>
+<li>Another 2 floats (24 kB) saved</li>
+</ul>
+</section>
+<section id="how-to-detect-redundancy" class="slide level2">
+<h2>How to Detect Redundancy?</h2>
+<ul>
+<li>Manual inspection :(</li>
+<li>Static/dynamic code analysis: What is being read and written
+to?</li>
+<li>E.g. valgrind based: instrument loads &amp; stores to save address
+and data width. At the end, determine all addresses that have not been
+read or written at the end and relate these addresses to symbols.</li>
+</ul>
+<p>Why will that likely not work?</p>
+</section>
+<section id="how-to-detect-redundancy-1" class="slide level2">
+<h2>How to Detect Redundancy?</h2>
+<pre class="text"><code>    Radar Sensor  ---&gt;  Preprocessing  ---&gt;  Perception, etc.
+      (Core 0)  --comm--&gt;  (Core 1)  --comm--&gt; (Core 2)</code></pre>
+<p>Somewhere in the communication code, there will be:</p>
+<div class="sourceCode" id="cb73"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>CommBuf<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>MeasurementData<span class="op">,</span> <span class="dv">1024</span><span class="op">&gt;,</span> <span class="dv">3</span><span class="op">&gt;</span> sensorToPreproc<span class="op">;</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>CommBuf<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>MeasurementData<span class="op">,</span> <span class="dv">1024</span><span class="op">&gt;,</span> <span class="dv">3</span><span class="op">&gt;</span> preprocToPerception<span class="op">;</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>memcpy<span class="op">(</span>preprocToPerception<span class="op">[</span>j<span class="op">],</span> sensorToPreproc<span class="op">[</span>i<span class="op">],</span> <span class="kw">sizeof</span><span class="op">(</span><span class="bu">std::</span>array<span class="op">&lt;</span>MeasurementData<span class="op">,</span> <span class="dv">1024</span><span class="op">&gt;));</span></span></code></pre></div>
+<ul>
+<li>This <code>memcpy</code> reads/writes the complete buffer
+<em>although</em> the values are not being used in the actual code</li>
+</ul>
+<p>What can I do?</p>
+<ul>
+<li>Hack something manual: Run code w/o communication and other
+overheads, so the unused data is actually not read and/or written.</li>
+<li>Domain-specific knowledge (e.g. of the radar sensor) and manual code
+inspection.</li>
+</ul>
+</section>
+<section id="static-destruction" class="slide level2">
+<h2>Static Destruction</h2>
+<ul>
+<li>Destruction order is defined by the C++ standard</li>
+<li>Inverse of construction order</li>
+<li>Construction order needs to be recorded somewhere!</li>
+</ul>
+<p><a
+href="https://godbolt.org/z/qeoE95Pcv">https://godbolt.org/z/qeoE95Pcv</a></p>
+<p>Rule:</p>
+<ul>
+<li>Make every global variable trivially destructible.</li>
+</ul>
+</section>
+<section id="stack-reduction" class="slide level2">
+<h2>Stack Reduction</h2>
+<p>Trivial things:</p>
+<ul>
+<li>Forgotten reference <code>&amp;</code>:
+<ul>
+<li><code>void foo(LargeStruct s);</code></li>
+<li><code>for (auto x: list)</code></li>
+</ul></li>
+<li>Streamline data transformation. (see above)
+<ul>
+<li>Try to get rid of “data conversion to satisfy interface”</li>
+<li>E.g.: Caller receives array of Cartesian coords, callee needs array
+of polar coords</li>
+</ul></li>
+<li>Use rich data structures stored once and manipulate them</li>
+</ul>
+<p>Afterwards, measure stack consumption during execution and reduce
+allocation in linker script.</p>
+</section></section>
+<section id="conclusion" class="title-slide slide level1">
+<h1>Conclusion</h1>
+<ul>
+<li>Know your goal and the artifacts you work with</li>
+<li>Measure, measure, measure</li>
+<li>Try to understand how C/C++ is implemented, refine this model
+regularly</li>
+<li>Relate memory consumption back to C/C++ constructs by manual
+inspection</li>
+<li>Know your toolchain</li>
+</ul>
+<p>Get right from the start:</p>
+<ul>
+<li>Inlining</li>
+<li>Padding</li>
+<li>Design: Separation of concerns, minimal data structures</li>
+</ul>
+</section>
+
+<section id="thank-you-for-your-attention"
+class="title-slide slide level1">
+<h1>Thank you for your Attention!</h1>
+<p>Any questions?</p>
+</section>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/reveal.js/dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="https://unpkg.com/reveal.js/plugin/notes/notes.js"></script>
+  <script src="https://unpkg.com/reveal.js/plugin/search/search.js"></script>
+  <script src="https://unpkg.com/reveal.js/plugin/zoom/zoom.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: true,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: true,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'slide',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'fast',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 900,
+
+        // reveal.js plugins
+        plugins: [
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    </body>
+</html>
