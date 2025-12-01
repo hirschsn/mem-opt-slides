@@ -412,7 +412,7 @@ IF you have a toolchain that mangles differently, but it comes with a `c++filt` 
 bloaty <options> <new_file> -- <old_file>
 ```
 
-Be careful of alignment in combination with linker reordering (might cause *arbitrary*, small differences).
+Be careful: symbol (functions & objects) alignment in combination with linker reordering (might cause *arbitrary*, small differences).
 
 
 
@@ -431,8 +431,7 @@ Additionally:
 No need for debug symbols, because Linker outputs this information besides ELF
 
 - GCC's `gold` linker: `-Map`
-- Check for your toolchain
-- Output by default, examine to check what info is available
+- Check for your toolchain, examine to check what info is available
 
 
 ## From “What” to “Why”
@@ -440,13 +439,13 @@ No need for debug symbols, because Linker outputs this information besides ELF
 - Names tell us (roughly) where the problem is
 - Typically problem not obvious in C/C++ code
 
-Drill further down from symbols to its parts
+Drill further down from symbols to its underlying bytes
 
 - Data memory layout / individual data members
 - Inspecting code / disassembly
 
 
-## Additional Info: Data Memory Layout in DWARF
+## Additional Info: Struct Layout in DWARF
 
 ```text
 0x0000a54d:   DW_TAG_structure_type
@@ -467,7 +466,7 @@ Drill further down from symbols to its parts
 0x0000a571:     NULL
 ```
 
-## Additional Info: View Data Memory Layout
+## Additional Info: View Struct Layout
 
 Information about struct layouts is saved in debug info (e.g. DWARF).
 Can be viewed with appropriate tools.
@@ -520,7 +519,7 @@ Dynamic (no upper bound guarantee!):
 ## The Elephant in the Room: Flags
 ASIL toolchains usually come with fixed flags
 
-If you *can* change them (GNU/Clang):
+Consider (GNU/Clang):
 
 - Optimization flags (-O1, -O2, -O3, -Os)
 - Errno and other overheads? (-fno-math-errno, -fno-stack-protector)
@@ -742,7 +741,7 @@ Deep call hierarchies might still need manual inlining *in either case*.
 2. Get a list of all functions sorted by size.
 
     - Mapfiles
-    - Coreutils NM, GHS gfunsize, bloaty, etc.
+    - `nm`, `readelf`, `bloaty`, etc.
     - Possibly: some post-processing to sort by size
 
 ![](img/inline-candidates.png){width=70%}

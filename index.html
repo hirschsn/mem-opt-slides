@@ -549,9 +549,8 @@ not need them</li>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> Elf64_Sym<span class="op">;</span></span></code></pre></div>
 <p>We can extract this information (if it is available) with tools</p>
 <ul>
-<li>Binutils: <code>nm -S</code></li>
-<li>GHS: <code>gfunsize</code></li>
-<li>…</li>
+<li>Binutils: <code>nm -S</code>, <code>readelf -s</code></li>
+<li>GHS <code>gfunsize</code>, Lauterbach Trace32, etc.</li>
 </ul>
 <p><img data-src="img/inline-candidates.png" /></p>
 <p>(Ignore the “candidates” stuff for now).</p>
@@ -562,16 +561,10 @@ class="slide level2">
 <p><a
 href="https://github.com/google/bloaty">https://github.com/google/bloaty</a></p>
 <div class="sourceCode" id="cb10"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloaty</span> <span class="dt">\</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--domain</span> vm <span class="dt">\</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">-s</span> vm <span class="dt">\</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">-d</span> sections,symbols <span class="dt">\</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">-n</span> 0 <span class="dt">\</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;</span>elf_file<span class="op">&gt;</span></span></code></pre></div>
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloaty</span> <span class="at">--domain</span> vm <span class="at">-s</span> vm <span class="at">-d</span> sections,symbols <span class="at">-n</span> 0 <span class="op">&lt;</span>elf_file<span class="op">&gt;</span></span></code></pre></div>
 <ul>
 <li><code>--domain vm</code>: runtime RAM/ROM consumption (in contrast
-to file size)</li>
-<li><code>-s vm</code> sort w.r.t. <code>vm</code> usage</li>
+to file size), <code>-s vm</code> sort w.r.t. <code>vm</code> usage</li>
 <li><code>-d sections,symbols</code> list sections and for each section
 the contained symbols (if you have debug symbols, you can also say
 <code>-d compileunits</code>)</li>
@@ -586,8 +579,9 @@ class="slide level2">
 <h2>Measuring RAM/ROM: Diffing Two Binaries</h2>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode sh"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloaty</span> <span class="op">&lt;</span>options<span class="op">&gt;</span> <span class="op">&lt;</span>new_file<span class="op">&gt;</span> -- <span class="op">&lt;</span>old_file<span class="op">&gt;</span></span></code></pre></div>
-<p>Be careful of alignment in combination with linker reordering (might
-cause <em>arbitrary</em>, small differences).</p>
+<p>Be careful: symbol (functions &amp; objects) alignment in combination
+with linker reordering (might cause <em>arbitrary</em>, small
+differences).</p>
 </section>
 <section id="measuring-ramrom-mapfiles" class="slide level2">
 <h2>Measuring RAM/ROM: Mapfiles</h2>
@@ -606,8 +600,8 @@ cause <em>arbitrary</em>, small differences).</p>
 besides ELF</p>
 <ul>
 <li>GCC’s <code>gold</code> linker: <code>-Map</code></li>
-<li>Check for your toolchain</li>
-<li>Output by default, examine to check what info is available</li>
+<li>Check for your toolchain, examine to check what info is
+available</li>
 </ul>
 </section>
 <section id="from-what-to-why" class="slide level2">
@@ -616,15 +610,15 @@ besides ELF</p>
 <li>Names tell us (roughly) where the problem is</li>
 <li>Typically problem not obvious in C/C++ code</li>
 </ul>
-<p>Drill further down from symbols to its parts</p>
+<p>Drill further down from symbols to its underlying bytes</p>
 <ul>
 <li>Data memory layout / individual data members</li>
 <li>Inspecting code / disassembly</li>
 </ul>
 </section>
-<section id="additional-info-data-memory-layout-in-dwarf"
+<section id="additional-info-struct-layout-in-dwarf"
 class="slide level2">
-<h2>Additional Info: Data Memory Layout in DWARF</h2>
+<h2>Additional Info: Struct Layout in DWARF</h2>
 <pre class="text"><code>0x0000a54d:   DW_TAG_structure_type
                 DW_AT_byte_size (0x08)
                 [...]
@@ -642,9 +636,8 @@ class="slide level2">
                   DW_AT_data_member_location    (0x04)
 0x0000a571:     NULL</code></pre>
 </section>
-<section id="additional-info-view-data-memory-layout"
-class="slide level2">
-<h2>Additional Info: View Data Memory Layout</h2>
+<section id="additional-info-view-struct-layout" class="slide level2">
+<h2>Additional Info: View Struct Layout</h2>
 <p>Information about struct layouts is saved in debug info (e.g. DWARF).
 Can be viewed with appropriate tools.</p>
 <ul>
@@ -702,7 +695,7 @@ class="title-slide slide level1">
 <section id="the-elephant-in-the-room-flags" class="slide level2">
 <h2>The Elephant in the Room: Flags</h2>
 <p>ASIL toolchains usually come with fixed flags</p>
-<p>If you <em>can</em> change them (GNU/Clang):</p>
+<p>Consider (GNU/Clang):</p>
 <ul>
 <li>Optimization flags (-O1, -O2, -O3, -Os)</li>
 <li>Errno and other overheads? (-fno-math-errno,
@@ -952,7 +945,8 @@ are large return values</li>
 <li><p>Get a list of all functions sorted by size.</p>
 <ul>
 <li>Mapfiles</li>
-<li>Coreutils NM, GHS gfunsize, bloaty, etc.</li>
+<li><code>nm</code>, <code>readelf</code>, <code>bloaty</code>,
+etc.</li>
 <li>Possibly: some post-processing to sort by size</li>
 </ul></li>
 </ol>
