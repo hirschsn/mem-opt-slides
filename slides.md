@@ -225,7 +225,7 @@ $ readelf -S my_program
 [...]
 
 Section Headers:
-  [Nr] Name              Type      Addr     Off    Size   ES Flg Lk Inf Al
+  [Nr] Name     Type      Addr     Off    Size   ES Flg Lk Inf Al
 [...]
   [ 2] .text    PROGBITS  00008040 008040 012d90 00  AX  0   0 64
 [...]
