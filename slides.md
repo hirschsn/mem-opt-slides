@@ -382,9 +382,8 @@ typedef struct
 
 We can extract this information (if it is available) with tools
 
-- Binutils: `nm -S`
-- GHS: `gfunsize`
-- ...
+- Binutils: `nm -S`, `readelf -s`
+- GHS `gfunsize`, Lauterbach Trace32, etc.
 
 ![](img/inline-candidates.png)
 
