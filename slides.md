@@ -395,16 +395,10 @@ We can extract this information (if it is available) with tools
 [https://github.com/google/bloaty](https://github.com/google/bloaty)
 
 ```sh
-bloaty \
-    --domain vm \
-    -s vm \
-    -d sections,symbols \
-    -n 0 \
-    <elf_file>
+bloaty --domain vm -s vm -d sections,symbols -n 0 <elf_file>
 ```
 
-- `--domain vm`: runtime RAM/ROM consumption (in contrast to file size)
-- `-s vm` sort w.r.t. `vm` usage
+- `--domain vm`: runtime RAM/ROM consumption (in contrast to file size), `-s vm` sort w.r.t. `vm` usage
 - `-d sections,symbols` list sections and for each section the contained symbols (if you have debug symbols, you can also say `-d compileunits`)
 - `-n 0` do not truncate
 
