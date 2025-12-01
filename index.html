@@ -397,9 +397,8 @@ Section Headers:
 
 [...]</code></pre>
 </section>
-<section id="special-elf-sections-symtab-dynsym-debug"
-class="slide level2">
-<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<section id="special-elf-sections" class="slide level2">
+<h2>Special ELF Sections</h2>
 <p>Ever encountered this while debugging?</p>
 <pre><code>0x00007ffff7fc310e in ?? () from ./liba.so
 (gdb) where
@@ -413,9 +412,8 @@ class="slide level2">
 <li>Here, we only see exported or imported symbols (“dynsym”)</li>
 </ul>
 </section>
-<section id="special-elf-sections-symtab-dynsym-debug-1"
-class="slide level2">
-<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<section id="special-elf-sections-1" class="slide level2">
+<h2>Special ELF Sections</h2>
 <p>Symbol tables in ELF (simplified)</p>
 <p>Liba.so internals, “a.c”:</p>
 <pre><code>static int f2(int i) { ... }        // internal linkage
@@ -454,9 +452,8 @@ linking)</li>
 <li>.debug_* is optional</li>
 </ul>
 </section>
-<section id="special-elf-sections-symtab-dynsym-debug-2"
-class="slide level2">
-<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<section id="special-elf-sections-2" class="slide level2">
+<h2>Special ELF Sections</h2>
 <p>Symbol tables in ELF (simplified)</p>
 <ul>
 <li>With .dynsym</li>
@@ -469,9 +466,8 @@ class="slide level2">
 #3 0x00007ffff7de7083 in __libc_start_main () from /lib/x86_64-linux-gnu/libc.so.6
 #4 0x00005555555550ce in ?? ()</code></pre>
 </section>
-<section id="special-elf-sections-symtab-dynsym-debug-3"
-class="slide level2">
-<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<section id="special-elf-sections-3" class="slide level2">
+<h2>Special ELF Sections</h2>
 <p>Symbol tables in ELF (simplified)</p>
 <ul>
 <li>With .dynsym, .symtab</li>
@@ -482,9 +478,8 @@ class="slide level2">
 #1 0x00007ffff7fc3156 in func1 () from ./liba.so
 #2 0x00005555555551b6 in main ()</code></pre>
 </section>
-<section id="special-elf-sections-symtab-dynsym-debug-4"
-class="slide level2">
-<h2>Special ELF Sections: symtab, dynsym, debug</h2>
+<section id="special-elf-sections-4" class="slide level2">
+<h2>Special ELF Sections</h2>
 <p>Symbol tables in ELF (simplified)</p>
 <ul>
 <li>With .dynsym, .symtab, .debug_*</li>

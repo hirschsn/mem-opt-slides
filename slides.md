@@ -241,7 +241,7 @@ Section Headers:
 ```
 
 
-## Special ELF Sections: symtab, dynsym, debug
+## Special ELF Sections
 
 Ever encountered this while debugging?
 
@@ -260,7 +260,7 @@ Ever encountered this while debugging?
 
 
 
-## Special ELF Sections: symtab, dynsym, debug
+## Special ELF Sections
 
 Symbol tables in ELF (simplified)
 
@@ -282,7 +282,7 @@ int func1(int i) { ... }			// external linkage
 - .debug_* is optional
 
 
-## Special ELF Sections: symtab, dynsym, debug
+## Special ELF Sections
 
 Symbol tables in ELF (simplified)
 
@@ -299,7 +299,7 @@ Symbol tables in ELF (simplified)
 ```
 
 
-## Special ELF Sections: symtab, dynsym, debug
+## Special ELF Sections
 
 Symbol tables in ELF (simplified)
 
@@ -314,7 +314,7 @@ Symbol tables in ELF (simplified)
 ```
 
 
-## Special ELF Sections: symtab, dynsym, debug
+## Special ELF Sections
 
 Symbol tables in ELF (simplified)
 
